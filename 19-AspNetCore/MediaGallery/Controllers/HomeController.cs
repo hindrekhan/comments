@@ -18,6 +18,8 @@ using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using ExifLibrary;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Microsoft.AspNet.Identity;
 
 namespace MediaGallery.Controllers
 {
@@ -207,6 +209,43 @@ namespace MediaGallery.Controllers
             ViewBag.Messages = list;
 
             return View();
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin, User")]
+        public IActionResult CreateComment(string mediaItemId, string content)
+        {
+            Comment comment = new Comment();
+
+            if (content.Length <= 0)
+                return View();
+
+            comment.Content = content;
+            comment.UserId = User.Identity.GetUserId();
+            comment.MediaItemId = Int32.Parse(mediaItemId);
+            comment.Time = DateTime.Now;
+
+            _dataContext.Comments.Add(comment);
+            _dataContext.SaveChanges();
+
+            return RedirectToAction("Details", new { id = mediaItemId });
+        }
+
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
+        public IActionResult DeleteComment(string commentId)
+        {
+            Comment comment = _dataContext.Comments.FirstOrDefault(x => x.Id == Int32.Parse(commentId));
+
+            if (comment == null)
+            {
+                return View();
+            }
+
+            _dataContext.Comments.Remove(comment);
+            _dataContext.SaveChanges();
+
+            return RedirectToAction("Details", new { id = comment.MediaItemId });
         }
 
         [HttpGet]

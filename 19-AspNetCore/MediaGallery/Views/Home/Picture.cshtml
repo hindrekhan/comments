@@ -52,21 +52,33 @@
                         </div>
                     }
 
-                    <div id="comments">
-                        @foreach (MediaGallery.Data.Comment comment in Model.Comments)
-                        {
-                            <p>@comment.Content | @comment.Time.ToLongDateString()</p>
-                        }
-                    </div>
+                        <div id="comments">
+                            @foreach (MediaGallery.Data.Comment comment in Model.Comments)
+                            {
+                                <p>@comment.Content | @comment.Time.ToLongDateString()</p>
 
-                    <form enctype="multipart/form-data" method="post" action="@Url.Action("CreateComment", "Home", new { parentFolder = ViewBag.ParentFolderId })">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <input type="text" name="comment" multiple />
-                        <div class="form-group">
-                            <input type="submit" value="Create comment" class="btn btn-default" />
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <form enctype="multipart/form-data" method="post" action="@Url.Action("DeleteComment", "Home", new { parentFolder = ViewBag.ParentFolderId })">
+                                        <input type="text" name="commentId" value="@comment.Id" style="visibility:hidden" />
+                                        <input type="submit" value="Remove comment" class="btn btn-default" />
+                                    </form> <!-- Ei oska confirmationit küsida-->
+                                }
+                            }
+
                         </div>
-                    </form>
-                </div>                
+                    @if (User.IsInRole("User") || User.IsInRole("Admin"))
+                    {
+                        <form enctype="multipart/form-data" method="post" action="@Url.Action("CreateComment", "Home", new { parentFolder = ViewBag.ParentFolderId })">
+                            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                            <input type="text" name="content" multiple />
+                            <input type="text" name="mediaItemId" style="visibility:hidden" value="@_context.GetItemUrl(Model).Split('/').Last()" />
+                            <div class="form-group">
+                                <input type="submit" value="Create comment" class="btn btn-default" />
+                            </div>
+                        </form>
+                    }
+                    </div>                
             </div>
             <!-- END CONTENT -->
         </div>
